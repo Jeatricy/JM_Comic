@@ -108,7 +108,10 @@ namespace JMComicClient.Views
 
         private async void Reset_Click(object sender, RoutedEventArgs e)
         {
-            DownloadDirBox.Text = "downloads";
+            DownloadDirBox.Text = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "禁漫天堂",
+                "downloads");
             SelectComboByTag(ImageFormatCombo, ".jpg");
             SelectComboByTag(OutputFormatCombo, "image");
             await DoSave();

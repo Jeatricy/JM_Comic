@@ -120,6 +120,7 @@ namespace JMComicClient.Views
                     var dlg = new LoginDialog { Owner = mainWindow };
                     if (dlg.ShowDialog() == true)
                     {
+                        mainWindow.SetLoggedInUser(dlg.LoggedInUsername);
                         _currentPage = 1;
                         _ = LoadFavorites();
                     }

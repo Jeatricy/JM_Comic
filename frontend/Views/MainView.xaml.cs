@@ -17,6 +17,16 @@ namespace JMComicClient.Views
 
         private async void MainView_Loaded(object sender, RoutedEventArgs e)
         {
+            if (App.BackendReady != null && !await App.BackendReady)
+            {
+                MessageBox.Show(
+                    "后端启动失败，请检查 JMComicBackend.exe 和端口 5000。",
+                    "启动失败",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+                return;
+            }
+
             // Try auto-login
             try
             {
@@ -46,6 +56,12 @@ namespace JMComicClient.Views
                 UsernameText.Foreground = new SolidColorBrush(Color.FromRgb(170, 170, 170));
                 LoginLogoutBtn.Content = "登录";
             }
+        }
+
+        public void SetLoggedInUser(string username)
+        {
+            _currentUsername = username;
+            UpdateUserUI(!string.IsNullOrWhiteSpace(username));
         }
 
         private void SetActiveNav(Button active)
@@ -102,9 +118,17 @@ namespace JMComicClient.Views
             if (!string.IsNullOrEmpty(_currentUsername))
             {
                 // Logout
-                await App.Api.LogoutAsync();
-                _currentUsername = null;
-                UpdateUserUI(false);
+                try
+                {
+                    await App.Api.LogoutAsync();
+                    _currentUsername = null;
+                    UpdateUserUI(false);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"退出登录失败: {ex.Message}", "错误",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
             else
             {

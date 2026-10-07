@@ -7,6 +7,11 @@ echo.
 
 echo [1/5] Installing PyInstaller...
 pip install pyinstaller --break-system-packages -q
+if errorlevel 1 (
+    echo [ERROR] PyInstaller installation failed
+    pause
+    exit /b 1
+)
 
 echo.
 echo [2/5] Building Python backend as exe...
@@ -21,8 +26,18 @@ echo [OK] Backend exe built
 
 echo.
 echo [3/5] Copying backend exe to frontend resources...
+if not exist "%~dp0backend\dist\JMComicBackend.exe" (
+    echo [ERROR] Backend executable was not produced
+    pause
+    exit /b 1
+)
 mkdir "%~dp0frontend\Resources" 2>nul
 copy /y "%~dp0backend\dist\JMComicBackend.exe" "%~dp0frontend\Resources\" >nul
+if errorlevel 1 (
+    echo [ERROR] Could not copy backend executable into frontend resources
+    pause
+    exit /b 1
+)
 echo [OK] Copied
 
 echo.

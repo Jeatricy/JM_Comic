@@ -42,6 +42,7 @@ namespace JMComicClient.Views
 
         private async System.Threading.Tasks.Task LoadRanking()
         {
+            LoadingText.Visibility = Visibility.Visible;
             ResultsPanel.Children.Clear();
             try
             {
@@ -61,6 +62,10 @@ namespace JMComicClient.Views
             catch (Exception ex)
             {
                 MessageBox.Show($"加载排行榜失败: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                LoadingText.Visibility = Visibility.Collapsed;
             }
         }
 

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Net.Http;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -15,22 +14,38 @@ namespace JMComicClient.Views
     public partial class ReaderView : Page
     {
         private readonly string _photoId;
+        private readonly string _albumTitle;
         private List<PageImage> _images;
         private double _zoomLevel = 1.0;
         private readonly List<Image> _imageElements = new();
         private readonly List<double> _originalWidths = new();
-        private static readonly HttpClient _httpClient = new() { Timeout = TimeSpan.FromSeconds(120) };
+        private Task _loadTask;
 
         public ReaderView(string photoId, string albumTitle = "")
         {
             _photoId = photoId;
+            _albumTitle = albumTitle ?? "";
             InitializeComponent();
             Loaded += ReaderView_Loaded;
         }
 
         private async void ReaderView_Loaded(object sender, RoutedEventArgs e)
         {
-            TitleText.Text = $"章节 {_photoId}";
+            if (_loadTask != null)
+            {
+                await _loadTask;
+                return;
+            }
+
+            _loadTask = LoadReaderAsync();
+            await _loadTask;
+        }
+
+        private async Task LoadReaderAsync()
+        {
+            TitleText.Text = string.IsNullOrWhiteSpace(_albumTitle)
+                ? $"章节 {_photoId}"
+                : _albumTitle;
             try
             {
                 LoadingDetail.Text = "正在获取章节信息...";
@@ -42,7 +57,13 @@ namespace JMComicClient.Views
 
                 // Trigger background chapter download
                 LoadingDetail.Text = $"正在下载并解密 {_images.Count} 张图片...";
-                await App.Api.DownloadChapterAsync(_photoId);
+                var downloadResponse = await App.Api.DownloadChapterAsync(_photoId);
+                if (downloadResponse == null ||
+                    (downloadResponse.Status != "ready" && downloadResponse.Status != "downloading"))
+                {
+                    LoadingDetail.Text = downloadResponse?.Error ?? "章节下载未能启动";
+                    return;
+                }
 
                 // Poll until ready
                 int pollCount = 0;
@@ -64,14 +85,14 @@ namespace JMComicClient.Views
                 for (int i = 0; i < _images.Count; i++)
                 {
                     var img = _images[i];
-                    var url = App.Api.GetImageUrl(img.ImgUrl, img.IsScrambled, _photoId, img.Index);
 
                     try
                     {
                         // Download + decode on background thread
                         var result = await Task.Run(async () =>
                         {
-                            var bytes = await _httpClient.GetByteArrayAsync(url);
+                            var bytes = await App.Api.GetImageBytesAsync(
+                                img.ImgUrl, _photoId, img.Index);
                             var bmp = new BitmapImage();
                             bmp.BeginInit();
                             bmp.StreamSource = new MemoryStream(bytes);

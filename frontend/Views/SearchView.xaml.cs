@@ -1,4 +1,6 @@
 using System;
+using System.IO;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -13,6 +15,7 @@ namespace JMComicClient.Views
         private int _currentPage = 1;
         private int _pageCount = 1;
         private string _currentQuery = "";
+        private int _searchRequestId;
 
         public SearchView()
         {
@@ -42,6 +45,7 @@ namespace JMComicClient.Views
 
         private async System.Threading.Tasks.Task SearchAsync()
         {
+            var requestId = ++_searchRequestId;
             LoadingText.Visibility = Visibility.Visible;
             ResultsPanel.Children.Clear();
 
@@ -50,6 +54,9 @@ namespace JMComicClient.Views
                 var resp = await App.Api.SearchAsync(
                     _currentQuery, _currentPage,
                     "", GetSelectedOrderBy());
+
+                if (requestId != _searchRequestId) return;
+                if (resp == null) throw new InvalidOperationException("后端返回了空响应");
 
                 if (resp?.Error != null)
                 {
@@ -77,7 +84,8 @@ namespace JMComicClient.Views
             }
             finally
             {
-                LoadingText.Visibility = Visibility.Collapsed;
+                if (requestId == _searchRequestId)
+                    LoadingText.Visibility = Visibility.Collapsed;
             }
         }
 
@@ -145,22 +153,6 @@ namespace JMComicClient.Views
                 Stretch = Stretch.UniformToFill,
                 HorizontalAlignment = HorizontalAlignment.Stretch,
             };
-            if (!string.IsNullOrEmpty(item.Id))
-            {
-                try
-                {
-                    var coverUrl = App.Api.GetCoverUrl(item.Id);
-                    var bmp = new BitmapImage();
-                    bmp.BeginInit();
-                    bmp.UriSource = new Uri(coverUrl);
-                    bmp.CacheOption = BitmapCacheOption.OnLoad;
-                    bmp.CreateOptions = BitmapCreateOptions.IgnoreColorProfile;
-                    bmp.DownloadFailed += (s, e2) => { /* silently ignore */ };
-                    bmp.EndInit();
-                    img.Source = bmp;
-                }
-                catch { }
-            }
             stack.Children.Add(img);
 
             // Title
@@ -227,15 +219,44 @@ namespace JMComicClient.Views
                     if (resp?.JobId != null)
                         DownloadView.RegisterJob(resp.JobId);
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"下载任务创建失败: {ex.Message}", "下载失败",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
             };
             btnPanel.Children.Add(dlBtn);
 
             stack.Children.Add(btnPanel);
             border.Child = stack;
-            border.MouseLeftButtonUp += (s, e) => onClick(item.Id);
 
             collection.Add(border);
+            _ = LoadCoverAsync(img, item.Id);
+        }
+
+        private static async Task LoadCoverAsync(Image image, string albumId)
+        {
+            try
+            {
+                var bytes = await App.Api.GetCoverBytesAsync(albumId);
+                var bitmap = await Task.Run(() =>
+                {
+                    using var stream = new MemoryStream(bytes);
+                    var bmp = new BitmapImage();
+                    bmp.BeginInit();
+                    bmp.StreamSource = stream;
+                    bmp.CacheOption = BitmapCacheOption.OnLoad;
+                    bmp.CreateOptions = BitmapCreateOptions.IgnoreColorProfile;
+                    bmp.EndInit();
+                    bmp.Freeze();
+                    return bmp;
+                });
+                await image.Dispatcher.InvokeAsync(() => image.Source = bitmap);
+            }
+            catch
+            {
+                // A missing cover should not block the search results.
+            }
         }
     }
 }

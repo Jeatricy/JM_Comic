@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -33,7 +35,7 @@ namespace JMComicClient.Views
                     LoadingText.Visibility = Visibility.Collapsed;
                     return;
                 }
-                BindData();
+                await BindDataAsync();
             }
             catch (Exception ex)
             {
@@ -43,7 +45,7 @@ namespace JMComicClient.Views
             }
         }
 
-        private void BindData()
+        private async Task BindDataAsync()
         {
             LoadingText.Visibility = Visibility.Collapsed;
 
@@ -52,14 +54,8 @@ namespace JMComicClient.Views
             {
                 try
                 {
-                    var bmp = new BitmapImage();
-                    bmp.BeginInit();
-                    bmp.UriSource = new Uri(App.Api.GetCoverUrl(_albumId));
-                    bmp.CacheOption = BitmapCacheOption.OnLoad;
-                    bmp.CreateOptions = BitmapCreateOptions.IgnoreColorProfile;
-                    bmp.DownloadFailed += (s, e2) => { };
-                    bmp.EndInit();
-                    CoverImage.Source = bmp;
+                    var bytes = await App.Api.GetCoverBytesAsync(_albumId);
+                    CoverImage.Source = await Task.Run(() => DecodeBitmap(bytes));
                 }
                 catch { }
             }
@@ -110,6 +106,19 @@ namespace JMComicClient.Views
             InfoPanel.Visibility = Visibility.Visible;
         }
 
+        private static BitmapImage DecodeBitmap(byte[] bytes)
+        {
+            using var stream = new MemoryStream(bytes);
+            var bitmap = new BitmapImage();
+            bitmap.BeginInit();
+            bitmap.StreamSource = stream;
+            bitmap.CacheOption = BitmapCacheOption.OnLoad;
+            bitmap.CreateOptions = BitmapCreateOptions.IgnoreColorProfile;
+            bitmap.EndInit();
+            bitmap.Freeze();
+            return bitmap;
+        }
+
         // ── Button handlers ──────────────────────────────────────
 
         private void Back_Click(object sender, RoutedEventArgs e)
@@ -124,12 +133,12 @@ namespace JMComicClient.Views
             {
                 var firstChapter = _detail.Chapters[0];
                 var mainWindow = Window.GetWindow(this) as MainView;
-                mainWindow?.NavigateToReader(firstChapter.Id, "");
+                mainWindow?.NavigateToReader(firstChapter.Id, _detail.Title ?? "");
             }
             else
             {
                 var mainWindow = Window.GetWindow(this) as MainView;
-                mainWindow?.NavigateToReader(_albumId, "");
+                mainWindow?.NavigateToReader(_albumId, _detail?.Title ?? "");
             }
         }
 
@@ -138,7 +147,7 @@ namespace JMComicClient.Views
             if (sender is Button btn && btn.Tag is string photoId)
             {
                 var mainWindow = Window.GetWindow(this) as MainView;
-                mainWindow?.NavigateToReader(photoId, "");
+                mainWindow?.NavigateToReader(photoId, _detail?.Title ?? "");
             }
         }
 
@@ -166,7 +175,11 @@ namespace JMComicClient.Views
                 if (resp?.JobId != null)
                     DownloadView.RegisterJob(resp.JobId);
             }
-            catch { }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"下载任务创建失败: {ex.Message}", "下载失败",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
     }
 

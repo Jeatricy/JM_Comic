@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
+using JMComicClient.Services;
 
 namespace JMComicClient.Views
 {
@@ -11,6 +12,7 @@ namespace JMComicClient.Views
     {
         private static readonly List<string> _activeJobs = new();
         private DispatcherTimer _pollTimer;
+        private bool _refreshInProgress;
 
         public DownloadView()
         {
@@ -23,8 +25,11 @@ namespace JMComicClient.Views
         {
             RefreshJobs();
             // Auto-poll every 2 seconds
-            _pollTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
-            _pollTimer.Tick += (s, args) => RefreshJobs();
+            if (_pollTimer == null)
+            {
+                _pollTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
+                _pollTimer.Tick += (s, args) => RefreshJobs();
+            }
             _pollTimer.Start();
         }
 
@@ -35,41 +40,66 @@ namespace JMComicClient.Views
 
         private async void RefreshJobs()
         {
-            if (_activeJobs.Count == 0)
+            if (_refreshInProgress) return;
+            _refreshInProgress = true;
+            try
             {
-                EmptyText.Visibility = Visibility.Visible;
-                return;
-            }
-            EmptyText.Visibility = Visibility.Collapsed;
-
-            // Preserve scroll position
-            var scrollViewer = DownloadList.Parent as ScrollViewer;
-            var scrollPos = scrollViewer?.VerticalOffset ?? 0;
-
-            DownloadList.Children.Clear();
-            bool hasRunning = false;
-
-            foreach (var jobId in _activeJobs.ToArray())
-            {
-                try
+                if (_activeJobs.Count == 0)
                 {
-                    var status = await App.Api.GetDownloadStatusAsync(jobId);
-                    if (status == null) continue;
-
-                    if (status.Status == "running" || status.Status == "downloading")
-                        hasRunning = true;
-
-                    DownloadList.Children.CreateJobCard(jobId, status, OnCancel);
+                    EmptyText.Visibility = Visibility.Visible;
+                    _pollTimer?.Stop();
+                    return;
                 }
-                catch { }
+                EmptyText.Visibility = Visibility.Collapsed;
+
+                // Preserve scroll position
+                var scrollViewer = DownloadList.Parent as ScrollViewer;
+                var scrollPos = scrollViewer?.VerticalOffset ?? 0;
+
+                DownloadList.Children.Clear();
+                bool hasRunning = false;
+
+                foreach (var jobId in _activeJobs.ToArray())
+                {
+                    try
+                    {
+                        var status = await App.Api.GetDownloadStatusAsync(jobId);
+                        if (status == null) continue;
+
+                        if (status.Status == "running" || status.Status == "downloading")
+                            hasRunning = true;
+
+                        DownloadList.Children.CreateJobCard(jobId, status, OnCancel);
+                    }
+                    catch (ApiException ex) when (ex.StatusCode == 404)
+                    {
+                        _activeJobs.Remove(jobId);
+                    }
+                    catch (Exception ex)
+                    {
+                        DownloadList.Children.Add(new TextBlock
+                        {
+                            Text = $"任务 {jobId} 加载失败: {ex.Message}",
+                            Foreground = Brushes.Red,
+                            Margin = new Thickness(0, 0, 0, 8),
+                        });
+                    }
+                }
+
+                if (_activeJobs.Count == 0)
+                    EmptyText.Visibility = Visibility.Visible;
+
+                // Stop polling if nothing is running
+                if (!hasRunning)
+                    _pollTimer?.Stop();
+
+                // Restore scroll position
+                scrollViewer?.ScrollToVerticalOffset(scrollPos);
             }
-
-            // Stop polling if nothing is running
-            if (!hasRunning)
-                _pollTimer?.Stop();
-
-            // Restore scroll position
-            scrollViewer?.ScrollToVerticalOffset(scrollPos);
+            finally
+            {
+                _refreshInProgress = false;
+            }
         }
 
         private async void OnCancel(string jobId)
@@ -79,7 +109,11 @@ namespace JMComicClient.Views
                 await App.Api.CancelDownloadAsync(jobId);
                 RefreshJobs();
             }
-            catch { }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"取消下载失败: {ex.Message}", "错误",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
 
         private async void OpenFolder_Click(object sender, RoutedEventArgs e)
@@ -101,12 +135,24 @@ namespace JMComicClient.Views
             }
         }
 
-        private void ClearCompleted_Click(object sender, RoutedEventArgs e)
+        private async void ClearCompleted_Click(object sender, RoutedEventArgs e)
         {
-            // Only remove non-running jobs
-            _activeJobs.RemoveAll(jid => true);
-            DownloadList.Children.Clear();
-            EmptyText.Visibility = Visibility.Visible;
+            foreach (var jobId in _activeJobs.ToArray())
+            {
+                try
+                {
+                    var status = await App.Api.GetDownloadStatusAsync(jobId);
+                    if (status?.Status is "completed" or "error" or "cancelled")
+                        _activeJobs.Remove(jobId);
+                }
+                catch (ApiException ex) when (ex.StatusCode == 404)
+                {
+                    _activeJobs.Remove(jobId);
+                }
+            }
+            if (_activeJobs.Count == 0)
+                EmptyText.Visibility = Visibility.Visible;
+            RefreshJobs();
         }
 
         public static void RegisterJob(string jobId)
