@@ -1,0 +1,81 @@
+<Page x:Class="JMComicClient.Views.RankingView"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      Background="#F5F5F5">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <TextBlock Grid.Row="0" Text="📊 排行榜" FontSize="24"
+                   FontWeight="Bold" Foreground="#333" Margin="0,0,0,16"/>
+
+        <!-- Filter bar -->
+        <Grid Grid.Row="1" Margin="0,0,0,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Rank type tabs -->
+            <StackPanel Grid.Column="0" Orientation="Horizontal"
+                        Margin="0,0,12,0">
+                <Button x:Name="DayTab" Content="日榜"
+                        Style="{StaticResource PrimaryButton}"
+                        FontSize="13" Padding="14,6"
+                        Click="DayTab_Click"/>
+                <Button x:Name="WeekTab" Content="周榜"
+                        Style="{StaticResource SecondaryButton}"
+                        FontSize="13" Padding="14,6"
+                        Click="WeekTab_Click" Margin="4,0,0,0"/>
+                <Button x:Name="MonthTab" Content="月榜"
+                        Style="{StaticResource SecondaryButton}"
+                        FontSize="13" Padding="14,6"
+                        Click="MonthTab_Click" Margin="4,0,0,0"/>
+            </StackPanel>
+
+            <Button x:Name="RefreshBtn" Grid.Column="1"
+                    Content="刷新" Style="{StaticResource PrimaryButton}"
+                    Click="Refresh_Click" MinWidth="70"/>
+        </Grid>
+
+        <!-- Loading -->
+        <TextBlock x:Name="LoadingText" Grid.Row="1"
+                   Text="加载中..." FontSize="13" Foreground="#999"
+                   Margin="0,40,0,0" Visibility="Collapsed"/>
+
+        <!-- Results -->
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+            <WrapPanel x:Name="ResultsPanel" Orientation="Horizontal"/>
+        </ScrollViewer>
+
+        <!-- Pagination -->
+        <Grid Grid.Row="3" Margin="0,12,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Button x:Name="PrevBtn" Grid.Column="1" Content="◀ 上一页"
+                    Style="{StaticResource SecondaryButton}"
+                    Click="Prev_Click" Margin="0,0,8,0"
+                    Visibility="Collapsed"/>
+            <TextBlock x:Name="PageText" Grid.Column="2"
+                       Text="第 1 页" FontSize="14"
+                       VerticalAlignment="Center" Margin="0,0,8,0"/>
+            <Button x:Name="NextBtn" Grid.Column="3" Content="下一页 ▶"
+                    Style="{StaticResource SecondaryButton}"
+                    Click="Next_Click"
+                    Visibility="Collapsed"/>
+        </Grid>
+    </Grid>
+</Page>

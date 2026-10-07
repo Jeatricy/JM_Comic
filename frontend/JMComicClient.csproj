@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ApplicationIcon Condition="Exists('app.ico')">app.ico</ApplicationIcon>
+    <AssemblyName>JMComicClient</AssemblyName>
+    <RootNamespace>JMComicClient</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+  <!-- App icon as resource -->
+  <ItemGroup Condition="Exists('app.ico')">
+    <Resource Include="app.ico" />
+  </ItemGroup>
+  <!-- Embed backend exe if it exists -->
+  <ItemGroup Condition="Exists('Resources\JMComicBackend.exe')">
+    <EmbeddedResource Include="Resources\JMComicBackend.exe">
+      <LogicalName>JMComicBackend.exe</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+</Project>

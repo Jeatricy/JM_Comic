@@ -1,0 +1,73 @@
+<Page x:Class="JMComicClient.Views.SettingsView"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      Background="#F5F5F5">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="⚙ 设置" FontSize="24"
+                   FontWeight="Bold" Foreground="#333" Margin="0,0,0,20"/>
+
+        <!-- Settings form -->
+        <StackPanel x:Name="SettingsForm" Grid.Row="1"
+                    MaxWidth="600" HorizontalAlignment="Left">
+
+            <!-- Download directory -->
+            <TextBlock Text="下载目录" FontSize="14" FontWeight="SemiBold"
+                       Foreground="#333" Margin="0,0,0,6"/>
+            <Grid Margin="0,0,0,16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBox x:Name="DownloadDirBox" Grid.Column="0"
+                         FontSize="13" Padding="8,6"
+                         IsReadOnly="True" Margin="0,0,8,0"/>
+                <Button Grid.Column="1" Content="选择..."
+                        Style="{StaticResource SecondaryButton}"
+                        FontSize="13" Padding="12,6"
+                        Click="BrowseDir_Click"/>
+            </Grid>
+
+            <!-- Image format -->
+            <TextBlock Text="图片格式" FontSize="14" FontWeight="SemiBold"
+                       Foreground="#333" Margin="0,0,0,6"/>
+            <ComboBox x:Name="ImageFormatCombo" Width="200"
+                      FontSize="13" Margin="0,0,0,16"
+                      HorizontalAlignment="Left">
+                <ComboBoxItem Content=".jpg (推荐)" Tag=".jpg" IsSelected="True"/>
+                <ComboBoxItem Content=".png" Tag=".png"/>
+                <ComboBoxItem Content=".webp" Tag=".webp"/>
+                <ComboBoxItem Content=".gif" Tag=".gif"/>
+            </ComboBox>
+
+            <!-- Output format -->
+            <TextBlock Text="默认输出格式" FontSize="14" FontWeight="SemiBold"
+                       Foreground="#333" Margin="0,0,0,6"/>
+            <ComboBox x:Name="OutputFormatCombo" Width="200"
+                      FontSize="13" Margin="0,0,0,16"
+                      HorizontalAlignment="Left">
+                <ComboBoxItem Content="图片文件夹" Tag="image" IsSelected="True"/>
+                <ComboBoxItem Content="PDF" Tag="pdf"/>
+            </ComboBox>
+
+            <!-- Save button -->
+            <StackPanel Orientation="Horizontal">
+                <Button x:Name="SaveBtn" Content="💾 保存设置"
+                        Style="{StaticResource PrimaryButton}"
+                        Click="Save_Click" Margin="0,0,8,0"/>
+                <Button x:Name="ResetBtn" Content="恢复默认"
+                        Style="{StaticResource SecondaryButton}"
+                        Click="Reset_Click"/>
+            </StackPanel>
+
+            <!-- Status -->
+            <TextBlock x:Name="StatusText" FontSize="13"
+                       Margin="0,12,0,0" Visibility="Collapsed"/>
+        </StackPanel>
+    </Grid>
+</Page>

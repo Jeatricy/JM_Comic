@@ -1,0 +1,86 @@
+<Page x:Class="JMComicClient.Views.ReaderView"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      Background="#1A1A1A">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Top toolbar -->
+        <Border Grid.Row="0" Background="#2C2C2C" Padding="12,8">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal"
+                            VerticalAlignment="Center">
+                    <Button Content="◀ 返回" Style="{StaticResource SecondaryButton}"
+                            BorderBrush="#666" Foreground="#CCC"
+                            FontSize="12" Padding="10,4"
+                            Click="Back_Click" Margin="0,0,12,0"/>
+                    <TextBlock x:Name="TitleText" Text="阅读"
+                               FontSize="14" Foreground="#CCC"
+                               VerticalAlignment="Center"/>
+                    <TextBlock x:Name="ProgressText" Text=""
+                               FontSize="12" Foreground="#888"
+                               VerticalAlignment="Center"
+                               Margin="8,0,0,0"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal"
+                            VerticalAlignment="Center">
+                    <Button Content="适配宽" FontSize="12"
+                            Style="{StaticResource SecondaryButton}"
+                            BorderBrush="#555" Foreground="#CCC"
+                            Padding="8,2" Click="FitWidth_Click"
+                            Margin="0,0,8,0"/>
+                    <Button Content="1:1" FontSize="12"
+                            Style="{StaticResource SecondaryButton}"
+                            BorderBrush="#555" Foreground="#CCC"
+                            Padding="8,2" Click="ZoomReset_Click"
+                            Margin="0,0,8,0"/>
+                    <TextBlock Text="缩放:" FontSize="12" Foreground="#AAA"
+                               VerticalAlignment="Center" Margin="0,0,4,0"/>
+                    <Slider x:Name="ZoomSlider" Width="160"
+                            Minimum="10" Maximum="300" Value="100"
+                            VerticalAlignment="Center"
+                            IsSnapToTickEnabled="True" TickFrequency="5"
+                            ValueChanged="ZoomSlider_ValueChanged"
+                            Margin="0,0,4,0"/>
+                    <TextBlock x:Name="ZoomText" Text="100%"
+                               FontSize="12" Foreground="#AAA"
+                               VerticalAlignment="Center"
+                               MinWidth="40"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Continuous scroll reader -->
+        <ScrollViewer x:Name="Scroller" Grid.Row="1"
+                      HorizontalScrollBarVisibility="Auto"
+                      VerticalScrollBarVisibility="Auto"
+                      Background="#1A1A1A"
+                      MouseWheel="Scroller_MouseWheel">
+            <StackPanel x:Name="ImageStack"
+                        HorizontalAlignment="Center">
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Loading overlay -->
+        <Border x:Name="LoadingOverlay" Grid.Row="1"
+                Background="#CC1A1A1A" Visibility="Visible">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock Text="加载中..." FontSize="18" Foreground="#AAA"
+                           HorizontalAlignment="Center"/>
+                <TextBlock x:Name="LoadingDetail" Text=""
+                           FontSize="13" Foreground="#777"
+                           HorizontalAlignment="Center" Margin="0,8,0,0"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Page>

@@ -1,0 +1,157 @@
+<Page x:Class="JMComicClient.Views.DetailView"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      Background="#F5F5F5">
+    <Grid>
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <Grid x:Name="MainGrid" Margin="24" MaxWidth="1000">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Loading -->
+                <TextBlock x:Name="LoadingText" Grid.Row="0"
+                           Text="加载中..." FontSize="16" Foreground="#999"
+                           HorizontalAlignment="Center" Margin="0,40,0,0"/>
+
+                <!-- Back button -->
+                <Button x:Name="BackBtn" Grid.Row="0" Content="◀ 返回"
+                        Style="{StaticResource SecondaryButton}"
+                        FontSize="13" Padding="12,6"
+                        HorizontalAlignment="Left"
+                        Click="Back_Click" Margin="0,0,0,12"/>
+
+                <!-- Main info area -->
+                <Grid x:Name="InfoPanel" Grid.Row="1" Visibility="Collapsed">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="220"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Cover -->
+                    <Border Grid.Column="0" CornerRadius="8" ClipToBounds="True"
+                            Margin="0,0,20,0"
+                            VerticalAlignment="Top">
+                        <Image x:Name="CoverImage" Width="220"
+                               Stretch="UniformToFill"/>
+                    </Border>
+
+                    <!-- Info -->
+                    <StackPanel Grid.Column="1" VerticalAlignment="Top">
+                        <TextBlock x:Name="TitleText" FontSize="22"
+                                   FontWeight="Bold" Foreground="#222"
+                                   TextWrapping="Wrap" Margin="0,0,0,8"/>
+
+                        <WrapPanel Margin="0,0,0,6">
+                            <TextBlock Text="ID: " FontSize="13" Foreground="#666"/>
+                            <TextBlock x:Name="IdText" FontSize="13"
+                                       Foreground="#FF4081" FontWeight="SemiBold"/>
+                        </WrapPanel>
+
+                        <WrapPanel Margin="0,0,0,4">
+                            <TextBlock Text="作者: " FontSize="13" Foreground="#666"/>
+                            <TextBlock x:Name="AuthorText" FontSize="13"
+                                       Foreground="#333"/>
+                        </WrapPanel>
+
+                        <WrapPanel Margin="0,0,0,4">
+                            <TextBlock Text="页数: " FontSize="13" Foreground="#666"/>
+                            <TextBlock x:Name="PageCountText" FontSize="13"
+                                       Foreground="#333"/>
+                        </WrapPanel>
+
+                        <WrapPanel Margin="0,0,0,4">
+                            <TextBlock Text="点赞: " FontSize="13" Foreground="#666"/>
+                            <TextBlock x:Name="LikesText" FontSize="13"
+                                       Foreground="#333"/>
+                        </WrapPanel>
+
+                        <!-- Tags -->
+                        <TextBlock x:Name="TagsText" FontSize="12"
+                                   Foreground="#666" TextWrapping="Wrap"
+                                   Margin="0,8,0,12"/>
+
+                        <!-- Action buttons -->
+                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                            <Button x:Name="ReadBtn" Content="📖 开始阅读"
+                                    Style="{StaticResource PrimaryButton}"
+                                    Click="ReadFirst_Click" Margin="0,0,8,0"/>
+                            <Button x:Name="FavBtn" Content="❤️ 加入收藏"
+                                    Style="{StaticResource SecondaryButton}"
+                                    Click="Fav_Click" Margin="0,0,8,0"/>
+                            <Button x:Name="DlBtn" Content="⬇️ 下载"
+                                    Style="{StaticResource PrimaryButton}"
+                                    Background="#42A5F5"
+                                    Click="Download_Click"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Description -->
+                <Border x:Name="DescPanel" Grid.Row="2"
+                        Background="White" CornerRadius="8"
+                        Padding="16" Margin="0,16,0,16"
+                        Visibility="Collapsed">
+                    <StackPanel>
+                        <TextBlock Text="📝 简介" FontSize="16" FontWeight="Bold"
+                                   Foreground="#333" Margin="0,0,0,8"/>
+                        <TextBlock x:Name="DescText" FontSize="13"
+                                   Foreground="#555" TextWrapping="Wrap"
+                                   LineHeight="20"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Chapters -->
+                <Border x:Name="ChapterPanel" Grid.Row="3"
+                        Background="White" CornerRadius="8"
+                        Padding="16" Margin="0,0,0,16"
+                        Visibility="Collapsed">
+                    <StackPanel>
+                        <TextBlock Text="📚 章节列表" FontSize="16"
+                                   FontWeight="Bold" Foreground="#333"
+                                   Margin="0,0,0,12"/>
+                        <ItemsControl x:Name="ChapterList">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="#F8F8F8"
+                                            CornerRadius="4"
+                                            Padding="12,8"
+                                            Margin="0,0,0,4"
+                                            Cursor="Hand">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0"
+                                                       Text="{Binding Title}"
+                                                       FontSize="14"
+                                                       Foreground="#333"
+                                                       VerticalAlignment="Center"/>
+                                            <Button Grid.Column="1"
+                                                    Content="阅读"
+                                                    Tag="{Binding Id}"
+                                                    Style="{StaticResource PrimaryButton}"
+                                                    FontSize="12"
+                                                    Padding="12,4"
+                                                    Click="ChapterRead_Click"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </ScrollViewer>
+
+        <!-- Error overlay -->
+        <TextBlock x:Name="ErrorText" FontSize="16" Foreground="Red"
+                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                   Visibility="Collapsed"/>
+    </Grid>
+</Page>
